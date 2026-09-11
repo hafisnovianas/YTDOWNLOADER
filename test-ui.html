@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YT Downloader API Tester</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f172a;
+            --surface: #1e293b;
+            --surface-hover: #334155;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --accent: #8b5cf6;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --error: #ef4444;
+            --success: #10b981;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem 1rem;
+            background-image:
+                radial-gradient(at 0% 0%, hsla(253, 16%, 7%, 1) 0, transparent 50%),
+                radial-gradient(at 50% 0%, hsla(225, 39%, 30%, 0.2) 0, transparent 50%),
+                radial-gradient(at 100% 0%, hsla(339, 49%, 30%, 0.2) 0, transparent 50%);
+            background-attachment: fixed;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 2.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #60a5fa, #c084fc);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center;
+        }
+
+        p.subtitle {
+            text-align: center;
+            color: var(--text-muted);
+            margin-bottom: 2.5rem;
+            font-size: 1.1rem;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 1.2rem 1.5rem;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            color: var(--text);
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15), inset 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        button {
+            padding: 0 2rem;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white;
+            border: none;
+            border-radius: 16px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 140px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 20px -3px rgba(59, 130, 246, 0.4);
+            filter: brightness(1.1);
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Endpoints Selection */
+        .endpoints {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            justify-content: center;
+        }
+
+        .endpoint-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 12px;
+            font-size: 0.95rem;
+        }
+
+        .endpoint-btn.active {
+            background: rgba(59, 130, 246, 0.15);
+            border-color: var(--primary);
+            color: #60a5fa;
+        }
+
+        /* Result Area */
+        .result-container {
+            display: none;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-top: 2rem;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.98);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .video-card {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+            align-items: flex-start;
+        }
+
+        .thumbnail {
+            width: 240px;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+            aspect-ratio: 16/9;
+            object-fit: cover;
+            background: #000;
+        }
+
+        .info {
+            flex: 1;
+        }
+
+        .title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            line-height: 1.4;
+        }
+
+        .meta {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .meta span {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .json-response {
+            background: #0f172a;
+            padding: 1.5rem;
+            border-radius: 12px;
+            font-family: monospace;
+            font-size: 0.9rem;
+            color: #a5b4fc;
+            overflow-x: auto;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .action-btn {
+            background: rgba(16, 185, 129, 0.1);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            text-decoration: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .action-btn:hover {
+            background: rgba(16, 185, 129, 0.2);
+            transform: translateY(-2px);
+        }
+
+        /* Loader */
+        .loader {
+            display: none;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-left-color: var(--primary);
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .error-msg {
+            color: var(--error);
+            background: rgba(239, 68, 68, 0.1);
+            padding: 1rem;
+            border-radius: 12px;
+            margin-top: 1rem;
+            display: none;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        @media (max-width: 640px) {
+            .input-group {
+                flex-direction: column;
+            }
+
+            button {
+                padding: 1.2rem;
+            }
+
+            .video-card {
+                flex-direction: column;
+            }
+
+            .thumbnail {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>YT API Tester</h1>
+        <p class="subtitle">Test local API endpoints beautifully before integrating to Apps Script</p>
+
+        <div class="endpoints">
+            <button class="endpoint-btn" onclick="setEndpoint('info')" id="btn-info">/info</button>
+            <button class="endpoint-btn active" onclick="setEndpoint('file')" id="btn-file">/file (Blob/Download)</button>
+        </div>
+
+        <div class="input-group">
+            <input type="text" id="urlInput" placeholder="Paste YouTube link here... (e.g. https://youtu.be/...)"
+                value="https://www.youtube.com/watch?v=dQw4w9WgXcQ">
+            <select id="qualitySelect"
+                style="padding: 1.2rem; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; color: var(--text); font-size: 1.1rem; outline: none; cursor: pointer;">
+                <option value="best">Highest (Auto)</option>
+                <option value="1080">1080p</option>
+                <option value="720" selected>720p</option>
+                <option value="480">480p</option>
+                <option value="360">360p</option>
+            </select>
+            <button id="processBtn" onclick="process()">
+                <span id="btnText">Execute API</span>
+                <div class="loader" id="loader"></div>
+            </button>
+        </div>
+
+        <div class="error-msg" id="errorMsg"></div>
+
+        <div class="result-container" id="resultContainer">
+            <div class="video-card" id="videoCard">
+                <img src="" alt="Thumbnail" class="thumbnail" id="resThumb">
+                <div class="info">
+                    <div class="title" id="resTitle">Video Title</div>
+                    <div class="meta">
+                        <span id="resRes">🎥 Resolution: -</span>
+                        <span id="resSize">💾 Size: -</span>
+                        <span id="resDur">⏱️ Duration: -</span>
+                    </div>
+                    <div class="action-buttons" id="actionButtons">
+                        <!-- Dynamic Buttons -->
+                    </div>
+                </div>
+            </div>
+
+            <h4 style="margin-bottom: 0.5rem; color: var(--text-muted);">Raw API Response:</h4>
+            <pre class="json-response" id="jsonResponse"></pre>
+        </div>
+    </div>
+
+    <script>
+        let currentEndpoint = 'file';
+        const API_BASE = 'http://localhost:3000';
+
+        function setEndpoint(ep) {
+            currentEndpoint = ep;
+            document.querySelectorAll('.endpoint-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('btn-' + ep).classList.add('active');
+        }
+
+        function formatBytes(bytes, decimals = 2) {
+            if (!+bytes) return '0 Bytes';
+            const k = 1024;
+            const dm = decimals < 0 ? 0 : decimals;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
+        }
+
+        async function process() {
+            const url = document.getElementById('urlInput').value.trim();
+            const quality = document.getElementById('qualitySelect').value;
+            if (!url) return;
+
+            // UI States
+            const btn = document.getElementById('processBtn');
+            const text = document.getElementById('btnText');
+            const loader = document.getElementById('loader');
+            const resultCont = document.getElementById('resultContainer');
+            const errorMsg = document.getElementById('errorMsg');
+
+            btn.disabled = true;
+            text.style.display = 'none';
+            loader.style.display = 'block';
+            resultCont.style.display = 'none';
+            errorMsg.style.display = 'none';
+
+            try {
+                const response = await fetch(`${API_BASE}/${currentEndpoint}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url, quality })
+                });
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    throw new Error(data.error || 'Failed to fetch from API');
+                }
+
+                // Render Success
+                document.getElementById('jsonResponse').textContent = JSON.stringify(data, null, 2);
+
+                const d = data.data;
+
+                // Show/Hide Video Card based on endpoint
+                const videoCard = document.getElementById('videoCard');
+                if (currentEndpoint === 'info') {
+                    videoCard.style.display = 'flex';
+                    document.getElementById('resThumb').src = d.thumbnail || '';
+                    document.getElementById('resTitle').textContent = d.title || 'Unknown Title';
+                    document.getElementById('resDur').textContent = `⏱️ Duration: ${d.duration_string || '-'}`;
+                    document.getElementById('resRes').textContent = `📋 Formats count: ${d.formats?.length || 0}`;
+                    document.getElementById('resSize').textContent = `👀 Views: ${d.view_count || '-'}`;
+                    document.getElementById('actionButtons').innerHTML = '';
+                } else {
+                    videoCard.style.display = 'flex';
+                    document.getElementById('resThumb').src = d.thumbnail || 'https://via.placeholder.com/240x135?text=Video';
+                    document.getElementById('resTitle').textContent = d.title || 'Downloaded Video';
+                    document.getElementById('resRes').textContent = `🎥 Quality: ${d.resolution || '-'}`;
+                    document.getElementById('resSize').textContent = `💾 Size: ${formatBytes(d.filesize)}`;
+                    document.getElementById('resDur').textContent = d.duration_string ? `⏱️ Duration: ${d.duration_string}` : `⏱️ Expires: ${d.expiresIn || '-'}`;
+
+                    const link = d.downloadUrl;
+                    document.getElementById('actionButtons').innerHTML = `
+                        <a href="${link}" target="_blank" class="action-btn">
+                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                            Buka Link Video / Stream
+                        </a>
+                    `;
+                }
+
+                resultCont.style.display = 'block';
+
+            } catch (err) {
+                errorMsg.textContent = '❌ Error: ' + err.message;
+                errorMsg.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                text.style.display = 'block';
+                loader.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+
+</html>
