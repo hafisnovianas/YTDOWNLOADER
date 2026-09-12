@@ -36,5 +36,6 @@ jobs:
             venv/bin/pip install -r requirements.txt
             
             # Restart aplikasi menggunakan PM2 (restart gracefully)
-            pm2 restart ytdownloader || pm2 start "venv/bin/python main.py" --name "ytdownloader"
+            export YTDL_API_KEY="${{ secrets.YTDL_API_KEY }}"
+            pm2 restart ytdownloader --update-env || pm2 start "venv/bin/python main.py" --name "ytdownloader"
             pm2 save

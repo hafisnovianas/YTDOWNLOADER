@@ -37,7 +37,7 @@ app.mount("/files", StaticFiles(directory=DOWNLOAD_DIR), name="files")
 from datetime import datetime, timedelta
 from collections import defaultdict
 
-API_KEY = "dijumper2026"
+API_KEY = os.getenv("YTDL_API_KEY", "ganti-key-ini-di-production")
 request_counts = defaultdict(list)
 RATE_LIMIT = 5
 RATE_LIMIT_PERIOD = timedelta(hours=1)
