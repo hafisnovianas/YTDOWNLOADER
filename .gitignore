@@ -1,3 +1,9 @@
 node_modules/
 downloads/
 .env
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/

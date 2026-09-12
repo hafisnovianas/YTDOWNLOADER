@@ -9,10 +9,15 @@ Dengan cara ini, setiap kali kamu melakukan `git push` ke GitHub, GitHub Actions
 ## Prasyarat di VPS
 Sebelum menyiapkan CI/CD, pastikan VPS kamu sudah siap:
 1. **Akses SSH** ke VPS kamu berfungsi.
-2. **Node.js & npm** sudah terinstall.
-3. **PM2** terinstall (digunakan untuk menjaga aplikasi tetap berjalan di background):
+2. **Python 3, pip, dan FFmpeg** sudah terinstall:
    ```bash
-   npm install -g pm2
+   sudo apt update
+   sudo apt install -y python3 python3-pip python-is-python3 ffmpeg
+   ```
+3. **PM2** terinstall (digunakan untuk menjaga aplikasi tetap berjalan di background). Kamu bisa menginstalnya via npm (jika ada Node.js) atau menggunakan alternatif lain, namun panduan ini mengasumsikan kamu memakai PM2:
+   ```bash
+   sudo apt install npm -y
+   sudo npm install -g pm2
    ```
 4. **Git** sudah terinstall.
 5. (Opsional tapi disarankan) Install **Nginx** sebagai Reverse Proxy untuk meneruskan trafik HTTP port 80/443 ke port 3000 lokal.
@@ -76,11 +81,11 @@ jobs:
             # Masuk ke folder yang baru saja dibuat & dicopy oleh langkah sebelumnya
             cd /home/${{ secrets.USERNAME }}/ytdownloader
             
-            # Install modul Node.js
-            npm install
+            # Install modul Python
+            pip install -r requirements.txt
             
-            # Restart aplikasi menggunakan PM2
-            pm2 restart ytdownloader || pm2 start server.js --name "ytdownloader"
+            # Restart aplikasi menggunakan PM2 (menjalankan uvicorn)
+            pm2 restart ytdownloader || pm2 start "uvicorn main:app --host 0.0.0.0 --port 3000" --name "ytdownloader"
 ```
 
 ### 3. Push ke GitHub

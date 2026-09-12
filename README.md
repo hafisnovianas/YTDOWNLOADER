@@ -12,15 +12,22 @@ A simple, local, self-hosted API for downloading YouTube videos using `yt-dlp` a
 ## 🚀 Getting Started
 
 ### Prerequisites
-Make sure you have run the installation (if you haven't already):
+Make sure you have Python 3 and FFmpeg installed on your system.
+For Ubuntu:
 ```bash
-npm install
+sudo apt update
+sudo apt install -y python3 python3-pip python-is-python3 ffmpeg
+```
+
+Install the Python dependencies:
+```bash
+pip install -r requirements.txt
 ```
 
 ### Starting the Server
-Start the development server:
+Start the development server using uvicorn:
 ```bash
-npm run dev
+uvicorn main:app --host 0.0.0.0 --port 3000 --reload
 ```
 The server will be running at `http://localhost:3000`.
 
