@@ -4,6 +4,7 @@ import asyncio
 import re
 from fastapi import FastAPI, HTTPException, Request, BackgroundTasks
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, HttpUrl
 from fastapi.middleware.cors import CORSMiddleware
 import yt_dlp
@@ -25,6 +26,13 @@ os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
 # Serve static files from downloads folder
 app.mount("/files", StaticFiles(directory=DOWNLOAD_DIR), name="files")
+
+@app.get("/")
+async def root():
+    ui_path = os.path.join(os.path.dirname(__file__), "test-ui.html")
+    if os.path.exists(ui_path):
+        return FileResponse(ui_path)
+    return {"message": "Welcome to YT Downloader API"}
 
 
 # Models for Request Bodies

@@ -325,7 +325,8 @@
 
         <div class="endpoints">
             <button class="endpoint-btn" onclick="setEndpoint('info')" id="btn-info">/info</button>
-            <button class="endpoint-btn active" onclick="setEndpoint('file')" id="btn-file">/file (Blob/Download)</button>
+            <button class="endpoint-btn active" onclick="setEndpoint('file')" id="btn-file">/file
+                (Blob/Download)</button>
         </div>
 
         <div class="input-group">
@@ -370,7 +371,7 @@
 
     <script>
         let currentEndpoint = 'file';
-        const API_BASE = 'http://localhost:8000';
+        const API_BASE = 'http://yt.dijumper.web.id';
 
         function setEndpoint(ep) {
             currentEndpoint = ep;
