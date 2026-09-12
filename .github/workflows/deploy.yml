@@ -32,8 +32,10 @@ jobs:
             # Masuk ke folder yang baru saja dibuat & dicopy oleh langkah sebelumnya
             cd /home/${{ secrets.USERNAME }}/ytdownloader
             
-            # Install modul Node.js
-            npm install
+            # Setup Python environment dan install requirements
+            python3 -m venv venv
+            source venv/bin/activate
+            pip install -r requirements.txt
             
             # Restart aplikasi menggunakan PM2
-            pm2 restart ytdownloader || pm2 start server.js --name "ytdownloader"
+            pm2 restart ytdownloader || pm2 start "venv/bin/python main.py" --name "ytdownloader"
