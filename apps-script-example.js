@@ -39,7 +39,7 @@ function getVideoInfo(youtubeUrl) {
     const json = JSON.parse(response.getContentText());
     
     if (responseCode === 200) {
-      Logger.log("✅ Berhasil! Judul: " + json.title);
+      Logger.log("✅ Berhasil! Judul: " + json.data.title);
       return json;
     } else {
       Logger.log("❌ Error (" + responseCode + "): " + json.detail);

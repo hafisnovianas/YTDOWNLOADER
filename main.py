@@ -234,6 +234,8 @@ async def download_video_file(req: FileRequest, request: Request, background_tas
         forwarded_proto = request.headers.get("x-forwarded-proto")
         if forwarded_proto:
             protocol = forwarded_proto
+        elif "localhost" not in host and "127.0.0.1" not in host:
+            protocol = "https"
 
         download_url = f"{protocol}://{host}/files/{downloaded_file}"
 
