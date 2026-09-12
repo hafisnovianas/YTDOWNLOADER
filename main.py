@@ -14,7 +14,11 @@ app = FastAPI(title="YT Downloader API", version="1.0.0")
 # Middleware CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://yt.dijumper.web.id",
+        "https://script.google.com",
+        "https://script.googleusercontent.com"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -27,6 +31,33 @@ os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 # Serve static files from downloads folder
 app.mount("/files", StaticFiles(directory=DOWNLOAD_DIR), name="files")
 
+# ============================================
+# Security: API Key & Rate Limiting
+# ============================================
+from datetime import datetime, timedelta
+from collections import defaultdict
+
+API_KEY = "dijumper2026"
+request_counts = defaultdict(list)
+RATE_LIMIT = 5
+RATE_LIMIT_PERIOD = timedelta(hours=1)
+
+def check_security(api_key: str, request: Request):
+    if api_key != API_KEY:
+        raise HTTPException(status_code=401, detail="Invalid API Key. You are not authorized.")
+        
+    client_ip = request.client.host
+    if request.headers.get("x-forwarded-for"):
+        client_ip = request.headers.get("x-forwarded-for").split(",")[0]
+        
+    now = datetime.now()
+    request_counts[client_ip] = [t for t in request_counts[client_ip] if now - t < RATE_LIMIT_PERIOD]
+    
+    if len(request_counts[client_ip]) >= RATE_LIMIT:
+        raise HTTPException(status_code=429, detail=f"Too Many Requests. Limit is {RATE_LIMIT} videos per hour.")
+        
+    request_counts[client_ip].append(now)
+
 @app.get("/")
 async def root():
     ui_path = os.path.join(os.path.dirname(__file__), "test-ui.html")
@@ -38,10 +69,12 @@ async def root():
 # Models for Request Bodies
 class InfoRequest(BaseModel):
     url: str
+    api_key: str = ""
 
 class FileRequest(BaseModel):
     url: str
     quality: str = "best"
+    api_key: str = ""
 
 
 # Helper Functions
@@ -95,7 +128,9 @@ def health_check():
 # Get video metadata (title, thumbnail, formats)
 # ============================================
 @app.post("/info")
-async def get_video_info(req: InfoRequest):
+async def get_video_info(req: InfoRequest, request: Request):
+    check_security(req.api_key, request)
+
     if not is_valid_youtube_url(req.url):
         raise HTTPException(status_code=400, detail="Invalid YouTube URL")
 
@@ -154,6 +189,8 @@ async def get_video_info(req: InfoRequest):
 # ============================================
 @app.post("/file")
 async def download_video_file(req: FileRequest, request: Request, background_tasks: BackgroundTasks):
+    check_security(req.api_key, request)
+
     if not is_valid_youtube_url(req.url):
         raise HTTPException(status_code=400, detail="Invalid YouTube URL")
 

@@ -329,6 +329,10 @@
                 (Blob/Download)</button>
         </div>
 
+        <div class="input-group" style="margin-bottom: 1rem;">
+            <input type="password" id="apiKeyInput" placeholder="🔑 Masukkan API Key rahasia Anda di sini..." value="">
+        </div>
+
         <div class="input-group">
             <input type="text" id="urlInput" placeholder="Paste YouTube link here... (e.g. https://youtu.be/...)"
                 value="https://www.youtube.com/watch?v=dQw4w9WgXcQ">
@@ -391,6 +395,7 @@
         async function process() {
             const url = document.getElementById('urlInput').value.trim();
             const quality = document.getElementById('qualitySelect').value;
+            const api_key = document.getElementById('apiKeyInput').value;
             if (!url) return;
 
             // UI States
@@ -410,7 +415,7 @@
                 const response = await fetch(`${API_BASE}/${currentEndpoint}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ url, quality })
+                    body: JSON.stringify({ url, quality, api_key })
                 });
 
                 const data = await response.json();
