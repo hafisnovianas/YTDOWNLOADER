@@ -436,7 +436,7 @@
                     document.getElementById('actionButtons').innerHTML = '';
                 } else {
                     videoCard.style.display = 'flex';
-                    document.getElementById('resThumb').src = d.thumbnail || 'https://via.placeholder.com/240x135?text=Video';
+                    document.getElementById('resThumb').src = d.thumbnail || 'https://placehold.co/240x135?text=Video';
                     document.getElementById('resTitle').textContent = d.title || 'Downloaded Video';
                     document.getElementById('resRes').textContent = `🎥 Quality: ${d.resolution || '-'}`;
                     document.getElementById('resSize').textContent = `💾 Size: ${formatBytes(d.filesize)}`;
