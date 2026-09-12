@@ -73,13 +73,15 @@ Sekarang kita akan mengajari "Resepsionis" kita cara meneruskan permintaan pengu
    sudo ln -s /etc/nginx/sites-available/aplikasi-kita /etc/nginx/sites-enabled/
    
    # 2. Menghapus konfigurasi default bawaan (agar tidak bentrok)
+   # ⚠️ CATATAN: Jika server ini sudah menjalankan aplikasi Nginx lain di konfigurasi 'default', JANGAN jalankan perintah ini agar aplikasi lama tidak mati!
    sudo unlink /etc/nginx/sites-enabled/default
    
    # 3. Mengecek apakah ada typo/salah ketik (pastikan outputnya "syntax is ok")
    sudo nginx -t
    
-   # 4. Merestart Nginx agar aturan baru mulai berlaku
-   sudo systemctl restart nginx
+   # 4. Me-reload Nginx agar aturan baru mulai berlaku
+   # Kita menggunakan 'reload' (bukan restart) agar koneksi di aplikasi Nginx Anda yang lain tidak terputus (zero downtime).
+   sudo systemctl reload nginx
    ```
 
 🎉 **Testing Langkah 2:** Buka browser dan ketikkan IP VPS Anda (contoh: `http://123.45.67.89`) tanpa `:8000`. Jika aplikasi Anda muncul, berarti Nginx sudah sukses bekerja!
@@ -117,9 +119,9 @@ Jika Anda ingin aplikasi Anda diakses melalui alamat seperti `namaproject.domain
    ```nginx
    server_name namaproject.domainanda.com;
    ```
-   Simpan, lalu restart Nginx:
+   Simpan, lalu reload Nginx:
    ```bash
-   sudo systemctl restart nginx
+   sudo systemctl reload nginx
    ```
 
 🎉 **Testing Langkah 4:** Akses `http://namaproject.domainanda.com` di browser Anda. Aplikasi Anda seharusnya muncul! 
