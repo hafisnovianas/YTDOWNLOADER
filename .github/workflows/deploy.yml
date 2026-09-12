@@ -32,8 +32,7 @@ jobs:
             # Masuk ke folder yang baru saja dibuat & dicopy oleh langkah sebelumnya
             cd /home/${{ secrets.USERNAME }}/ytdownloader
             
-            # Setup Python environment dan install requirements
-            python3 -m venv venv
+            # Install dependensi (sangat aman dijalankan tiap deploy)
             venv/bin/pip install -r requirements.txt
             
             # Restart aplikasi menggunakan PM2 (restart gracefully)

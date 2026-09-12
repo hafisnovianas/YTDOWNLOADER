@@ -12,21 +12,29 @@ Sebelum menyiapkan CI/CD, pastikan VPS kamu sudah siap:
 2. **Python 3, pip, dan FFmpeg** sudah terinstall:
    ```bash
    sudo apt update
-   sudo apt install -y python3 python3-pip python-is-python3 ffmpeg
+   sudo apt install -y python3 python3-pip python3-venv python-is-python3 ffmpeg
    ```
 3. **PM2** terinstall (digunakan untuk menjaga aplikasi tetap berjalan di background). Kamu bisa menginstalnya via npm (jika ada Node.js) atau menggunakan alternatif lain, namun panduan ini mengasumsikan kamu memakai PM2:
    ```bash
    sudo apt install npm -y
    sudo npm install -g pm2
    ```
-4. **Git** sudah terinstall.
-5. (Opsional tapi disarankan) Install **Nginx** sebagai Reverse Proxy untuk meneruskan trafik HTTP port 80/443 ke port 3000 lokal.
+2. **Git** sudah terinstall.
+3. (Opsional tapi disarankan) Install **Nginx** sebagai Reverse Proxy untuk meneruskan trafik HTTP port 80/443 ke port 3000 lokal.
+
+### 1. Setup Awal Virtual Environment (Lakukan sekali di VPS)
+Sebelum GitHub Actions bisa men-deploy aplikasi secara otomatis, kamu perlu menyiapkan folder target dan membuat Virtual Environment (venv) di VPS kamu secara manual *satu kali*:
+```bash
+mkdir -p ~/ytdownloader
+cd ~/ytdownloader
+python3 -m venv venv
+```
 
 ---
 
 ## Langkah-langkah Setup CI/CD
 
-### 1. Siapkan SSH Key di GitHub
+### 2. Siapkan SSH Key di GitHub
 Agar GitHub Actions bisa me-remote VPS kamu secara otomatis dan aman, kita perlu memasukkan rahasia koneksi (Secrets) ke repository GitHub.
 
 - Masuk ke repository GitHub kamu.
@@ -37,7 +45,7 @@ Agar GitHub Actions bisa me-remote VPS kamu secara otomatis dan aman, kita perlu
   - `SSH_KEY`: Isi dengan **Private Key SSH** dari VPS kamu.
     *(Cara mendapatkannya: di VPS kamu jalankan `cat ~/.ssh/id_rsa`, salin semua text dari `-----BEGIN RSA PRIVATE KEY-----` sampai `-----END RSA PRIVATE KEY-----`. Jika belum punya, buat dulu dengan `ssh-keygen -t rsa` di VPS).*
 
-### 2. Buat File Workflow GitHub Actions
+### 3. Buat File Workflow GitHub Actions
 Langkah ini dilakukan di kode lokal kamu:
 
 1. Buat folder bernama `.github` di root direktori project kamu.
@@ -81,14 +89,15 @@ jobs:
             # Masuk ke folder yang baru saja dibuat & dicopy oleh langkah sebelumnya
             cd /home/${{ secrets.USERNAME }}/ytdownloader
             
-            # Install modul Python
-            pip install -r requirements.txt
+            # Install dependensi (sangat aman dijalankan tiap deploy)
+            venv/bin/pip install -r requirements.txt
             
-            # Restart aplikasi menggunakan PM2 (menjalankan uvicorn)
-            pm2 restart ytdownloader || pm2 start "uvicorn main:app --host 0.0.0.0 --port 3000" --name "ytdownloader"
+            # Restart aplikasi menggunakan PM2 (restart gracefully)
+            pm2 restart ytdownloader || pm2 start "venv/bin/python main.py" --name "ytdownloader"
+            pm2 save
 ```
 
-### 3. Push ke GitHub
+### 4. Push ke GitHub
 Simpan file `deploy.yml` tadi. Lakukan *commit* dan *push* perubahan tersebut ke GitHub:
 
 ```bash
