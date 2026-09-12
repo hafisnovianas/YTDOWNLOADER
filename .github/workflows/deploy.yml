@@ -34,8 +34,7 @@ jobs:
             
             # Setup Python environment dan install requirements
             python3 -m venv venv
-            source venv/bin/activate
-            pip install -r requirements.txt
+            venv/bin/pip install -r requirements.txt
             
             # Restart aplikasi menggunakan PM2 (restart gracefully)
             pm2 restart ytdownloader || pm2 start "venv/bin/python main.py" --name "ytdownloader"
