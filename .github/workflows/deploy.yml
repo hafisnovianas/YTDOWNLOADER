@@ -32,10 +32,17 @@ jobs:
             # Masuk ke folder yang baru saja dibuat & dicopy oleh langkah sebelumnya
             cd /home/${{ secrets.USERNAME }}/ytdownloader
             
+            # Bersihkan file Node.js yang sudah tidak terpakai
+            rm -rf server.js package.json package-lock.json node_modules
+            
+            # Hapus proses PM2 lama (karena sebelumnya menunjuk ke server.js)
+            pm2 delete ytdownloader || true
+            
             # Setup Python environment dan install requirements
             python3 -m venv venv
             source venv/bin/activate
             pip install -r requirements.txt
             
-            # Restart aplikasi menggunakan PM2
-            pm2 restart ytdownloader || pm2 start "venv/bin/python main.py" --name "ytdownloader"
+            # Start aplikasi baru menggunakan PM2 dengan Python
+            pm2 start "venv/bin/python main.py" --name "ytdownloader"
+            pm2 save
