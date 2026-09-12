@@ -213,5 +213,5 @@ async def download_video_file(req: FileRequest, request: Request, background_tas
 if __name__ == "__main__":
     import uvicorn
     # Make sure this matches the port you expect to run on locally. 
-    # Usually you start it via `uvicorn main:app --host 0.0.0.0 --port 3000`
-    uvicorn.run(app, host="0.0.0.0", port=3000)
+    # Usually you start it via `uvicorn main:app --host 0.0.0.0 --port 8000`
+    uvicorn.run(app, host="0.0.0.0", port=8000)

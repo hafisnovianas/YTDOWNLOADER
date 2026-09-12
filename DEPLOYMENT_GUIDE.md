@@ -20,7 +20,7 @@ Sebelum menyiapkan CI/CD, pastikan VPS kamu sudah siap:
    sudo npm install -g pm2
    ```
 2. **Git** sudah terinstall.
-3. (Opsional tapi disarankan) Install **Nginx** sebagai Reverse Proxy untuk meneruskan trafik HTTP port 80/443 ke port 3000 lokal.
+3. (Opsional tapi disarankan) Install **Nginx** sebagai Reverse Proxy untuk meneruskan trafik HTTP port 80/443 ke port 8000 lokal.
 
 ### 1. Setup Awal Virtual Environment (Lakukan sekali di VPS)
 Sebelum GitHub Actions bisa men-deploy aplikasi secara otomatis, kamu perlu menyiapkan folder target dan membuat Virtual Environment (venv) di VPS kamu secara manual *satu kali*:
