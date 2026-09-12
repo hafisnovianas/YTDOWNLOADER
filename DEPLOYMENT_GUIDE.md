@@ -1,4 +1,4 @@
-# Panduan Hosting & CI/CD dari GitHub ke VPS
+# Panduan Hosting & CI/CD dari GitHub ke VPS 
 
 Karena aplikasi ini membutuhkan **Node.js**, **FFmpeg**, dan **yt-dlp**, panduan ini difokuskan pada penggunaan VPS (misalnya DigitalOcean, AWS, Hostinger, atau server lokal dengan Ubuntu/Debian) yang dikombinasikan dengan otomatisasi **GitHub Actions**.
 
