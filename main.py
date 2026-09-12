@@ -208,6 +208,7 @@ async def download_video_file(req: FileRequest, request: Request, background_tas
             "data": {
                 "downloadUrl": download_url,
                 "title": info.get("title", "Unknown"),
+                "thumbnail": info.get("thumbnail"),
                 "filename": downloaded_file,
                 "filesize": filesize,
                 "expiresIn": "30 minutes",
