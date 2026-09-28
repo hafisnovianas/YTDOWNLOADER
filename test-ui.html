@@ -447,7 +447,7 @@
                     document.getElementById('resTitle').textContent = d.title || 'Downloaded Video';
                     document.getElementById('resRes').textContent = `🎥 Quality: ${d.resolution || '-'}`;
                     document.getElementById('resSize').textContent = `💾 Size: ${formatBytes(d.filesize)}`;
-                    document.getElementById('resDur').textContent = d.duration_string ? `⏱️ Duration: ${d.duration_string}` : `⏱️ Expires: ${d.expiresIn || '-'}`;
+                    document.getElementById('resDur').textContent = (d.duration_string ? `⏱️ Duration: ${d.duration_string}  •  ` : '') + `⏳ Expires: ${d.expiresIn || '-'}`;
 
                     const link = d.downloadUrl;
                     document.getElementById('actionButtons').innerHTML = `

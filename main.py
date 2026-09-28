@@ -269,12 +269,33 @@ async def download_video_file(req: FileRequest, request: Request, background_tas
         # Schedule cleanup in background after 30 minutes
         background_tasks.add_task(cleanup_file, filepath, 1800)
 
+        # Determine real resolution of the downloaded video
+        real_resolution = None
+        if info.get("height"):
+            real_resolution = f"{info.get('height')}p"
+        elif info.get("resolution"):
+            real_resolution = info.get("resolution")
+        elif "requested_downloads" in info and info["requested_downloads"]:
+            for d in info["requested_downloads"]:
+                if d.get("height"):
+                    real_resolution = f"{d.get('height')}p"
+                    break
+                elif d.get("resolution"):
+                    real_resolution = d.get("resolution")
+                    break
+
+        if not real_resolution and req.quality not in ("best", "worst"):
+            real_resolution = f"{req.quality}p"
+
         return {
             "success": True,
             "data": {
                 "downloadUrl": download_url,
                 "title": info.get("title", "Unknown"),
                 "thumbnail": info.get("thumbnail"),
+                "duration": info.get("duration"),
+                "duration_string": info.get("duration_string"),
+                "resolution": real_resolution or "Unknown",
                 "filename": downloaded_file,
                 "filesize": filesize,
                 "expiresIn": "30 minutes",
