@@ -14,13 +14,17 @@ Sebelum menyiapkan CI/CD, pastikan VPS kamu sudah siap:
    sudo apt update
    sudo apt install -y python3 python3-pip python3-venv python-is-python3 ffmpeg
    ```
-3. **PM2** terinstall (digunakan untuk menjaga aplikasi tetap berjalan di background). Kamu bisa menginstalnya via npm (jika ada Node.js) atau menggunakan alternatif lain, namun panduan ini mengasumsikan kamu memakai PM2:
+3. **PM2** terinstall (digunakan untuk menjaga aplikasi tetap berjalan di background):
    ```bash
    sudo apt install npm -y
    sudo npm install -g pm2
    ```
-2. **Git** sudah terinstall.
-3. (Opsional tapi disarankan) Install **Nginx** sebagai Reverse Proxy untuk meneruskan trafik HTTP port 80/443 ke port 8000 lokal.
+4. **Deno** terinstall (digunakan oleh `yt-dlp` untuk memecahkan enkripsi/signature video YouTube secara ringan dan stabil):
+   ```bash
+   curl -fsSL https://deno.land/install.sh | sh && sudo ln -s ~/.deno/bin/deno /usr/local/bin/deno
+   ```
+5. **Git** sudah terinstall.
+6. (Opsional tapi disarankan) Install **Nginx** sebagai Reverse Proxy untuk meneruskan trafik HTTP port 80/443 ke port 8000 lokal.
 
 ### 1. Setup Awal Virtual Environment (Lakukan sekali di VPS)
 Sebelum GitHub Actions bisa men-deploy aplikasi secara otomatis, kamu perlu menyiapkan folder target dan membuat Virtual Environment (venv) di VPS kamu secara manual *satu kali*:

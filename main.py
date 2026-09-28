@@ -114,13 +114,13 @@ async def cleanup_file(filepath: str, delay_seconds: int = 1800):
         print(f"Failed to clean up {filepath}: {str(e)}")
 
 
-NODE_BIN = shutil.which("node") or "/usr/bin/node"
+DENO_BIN = shutil.which("deno") or "/usr/local/bin/deno"
 
 def get_base_ydl_opts() -> dict:
-    """Konfigurasi dasar yt-dlp dengan dukungan cookies dan EJS challenge solver via Node.js."""
+    """Konfigurasi dasar yt-dlp dengan dukungan cookies dan EJS challenge solver via Deno."""
     opts = {
         "js_runtimes": {
-            "node": {"path": NODE_BIN}
+            "deno": {"path": DENO_BIN}
         },
         "remote_components": ["ejs:github"],
     }
