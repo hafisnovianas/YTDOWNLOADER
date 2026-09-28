@@ -1,4 +1,6 @@
 import os
+# Hapus variabel NODE_CHANNEL_FD warisan PM2 agar Deno tidak crash karena mencoba membuka IPC channel Node.js
+os.environ.pop("NODE_CHANNEL_FD", None)
 import time
 import asyncio
 import re
