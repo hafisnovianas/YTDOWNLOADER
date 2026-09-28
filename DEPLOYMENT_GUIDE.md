@@ -9,10 +9,10 @@ Dengan cara ini, setiap kali kamu melakukan `git push` ke GitHub, GitHub Actions
 ## Prasyarat di VPS
 Sebelum menyiapkan CI/CD, pastikan VPS kamu sudah siap:
 1. **Akses SSH** ke VPS kamu berfungsi.
-2. **Python 3, pip, dan FFmpeg** sudah terinstall:
+2. **Python 3, pip, FFmpeg, dan Unzip** sudah terinstall:
    ```bash
    sudo apt update
-   sudo apt install -y python3 python3-pip python3-venv python-is-python3 ffmpeg
+   sudo apt install -y python3 python3-pip python3-venv python-is-python3 ffmpeg unzip
    ```
 3. **PM2** terinstall (digunakan untuk menjaga aplikasi tetap berjalan di background):
    ```bash
@@ -21,7 +21,7 @@ Sebelum menyiapkan CI/CD, pastikan VPS kamu sudah siap:
    ```
 4. **Deno** terinstall (digunakan oleh `yt-dlp` untuk memecahkan enkripsi/signature video YouTube secara ringan dan stabil):
    ```bash
-   curl -fsSL https://deno.land/install.sh | sh && sudo ln -s ~/.deno/bin/deno /usr/local/bin/deno
+   sudo apt install -y unzip && curl -fsSL https://deno.land/install.sh | sh && sudo ln -s ~/.deno/bin/deno /usr/local/bin/deno
    ```
 5. **Git** sudah terinstall.
 6. (Opsional tapi disarankan) Install **Nginx** sebagai Reverse Proxy untuk meneruskan trafik HTTP port 80/443 ke port 8000 lokal.
