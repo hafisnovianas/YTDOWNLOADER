@@ -2,6 +2,7 @@ import os
 import time
 import asyncio
 import re
+import shutil
 from fastapi import FastAPI, HTTPException, Request, BackgroundTasks
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -113,12 +114,14 @@ async def cleanup_file(filepath: str, delay_seconds: int = 1800):
         print(f"Failed to clean up {filepath}: {str(e)}")
 
 
+NODE_BIN = shutil.which("node") or "/usr/bin/node"
+
 def get_base_ydl_opts() -> dict:
     """Konfigurasi dasar yt-dlp dengan dukungan cookies dan EJS challenge solver via Node.js."""
     opts = {
-        "quiet": True,
-        "no_warnings": True,
-        "js_runtimes": {"node": {}},
+        "js_runtimes": {
+            "node": {"path": NODE_BIN}
+        },
         "remote_components": ["ejs:github"],
     }
     if os.path.exists(COOKIE_FILE) and os.path.getsize(COOKIE_FILE) > 0:
