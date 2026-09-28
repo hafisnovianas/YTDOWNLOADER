@@ -118,7 +118,7 @@ def get_base_ydl_opts() -> dict:
     opts = {
         "quiet": True,
         "no_warnings": True,
-        "js_runtimes": "node",
+        "js_runtimes": {"node": {}},
         "remote_components": ["ejs:github"],
     }
     if os.path.exists(COOKIE_FILE) and os.path.getsize(COOKIE_FILE) > 0:
