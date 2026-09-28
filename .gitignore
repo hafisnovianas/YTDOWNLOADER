@@ -7,3 +7,9 @@ __pycache__/
 *.pyc
 venv/
 .venv/
+
+# Cookies & Secrets
+cookies.txt
+raw_cookie.txt
+*.cookie
+*.cookies

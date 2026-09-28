@@ -110,6 +110,43 @@ Setelah push berhasil, kamu bisa membuka tab **Actions** di halaman repository G
 
 ---
 
-## Catatan Penting
-- **Penyimpanan (Storage):** Endpoint `/file` akan menyimpan file sementara di folder `downloads/`. Aplikasi ini sudah diatur agar otomatis menghapusnya setelah 30 menit. Pastikan kapasitas disk VPS kamu cukup (minimal 10GB+) jika aplikasi ini mendownload file video besar secara rutin.
-- **Batasan IP (Rate Limiting):** YouTube terkadang mendeteksi dan memblokir IP dari data center besar (seperti AWS atau DigitalOcean) jika terlalu sering mendownload video dalam waktu singkat. Jika API kamu nanti mulai memunculkan pesan error seperti `Sign in to confirm you're not a bot` atau error 403, kamu perlu menggunakan metode *Cookies* di yt-dlp, menggunakan proxy rotasi, atau mencari VPS provider yang *residential IP*.
+## Mengatasi Masalah: "Sign in to confirm you're not a bot"
+
+YouTube secara agresif memblokir IP data center (seperti AWS EC2, DigitalOcean, Google Cloud) dan meminta autentikasi bot. Jika muncul error `Sign in to confirm you’re not a bot`, ikuti 2 langkah ini:
+
+### 1. Update yt-dlp di VPS ke Versi Paling Baru
+YouTube selalu memperbarui proteksinya. Pastikan `yt-dlp` di VPS kamu adalah rilis paling baru:
+```bash
+cd ~/ytdownloader
+venv/bin/pip install -U yt-dlp
+pm2 restart ytdownloader
+```
+
+### 2. Pasang File `cookies.txt` dari Browser ke VPS (Solusi Paling Ampuh)
+Dengan memberikan cookies akun YouTube manusia, server kamu akan diperlakukan sebagai pengguna resmi dan lolos dari deteksi bot.
+
+1. **Pasang Ekstensi Browser**:
+   - Di Chrome/Brave/Edge: Cari ekstensi **"Get cookies.txt LOCALLY"** (atau ekstensi pengekspor Netscape cookies yang open source).
+2. **Ekspor Cookies YouTube**:
+   - Buka `youtube.com` dan pastikan kamu sudah login (disarankan pakai akun Google sekunder/cadangan).
+   - Klik ikon ekstensi **Get cookies.txt LOCALLY**, lalu klik **Export** untuk mendownload file bernama `cookies.txt`.
+3. **Upload `cookies.txt` ke VPS**:
+   - Letakkan file tersebut di folder aplikasi VPS: `/home/ubuntu/ytdownloader/cookies.txt`.
+   - Cara 1 (via SCP dari terminal lokal kamu):
+     ```bash
+     scp /path/ke/cookies.txt ubuntu@IP_VPS:/home/ubuntu/ytdownloader/cookies.txt
+     ```
+   - Cara 2 (via nano langsung di VPS):
+     ```bash
+     cd ~/ytdownloader
+     nano cookies.txt
+     # Paste isi file cookies.txt kamu ke sini, lalu Ctrl+O, Enter, dan Ctrl+X
+     ```
+4. **Restart PM2 & Cek Status**:
+   ```bash
+   pm2 restart ytdownloader
+   ```
+   Buka `https://yt.dijumper.web.id/health` di browser. Jika berhasil, kamu akan melihat `"cookies_loaded": true`.
+
+> **Catatan Keamanan:** File `cookies.txt` sudah dimasukkan ke `.gitignore` sehingga tidak akan pernah ter-push ke GitHub publik. Jangan pernah membagikan file `cookies.txt` kepada siapa pun karena berisi sesi login YouTube kamu.
+

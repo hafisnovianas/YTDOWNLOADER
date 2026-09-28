@@ -28,6 +28,9 @@ app.add_middleware(
 DOWNLOAD_DIR = os.path.join(os.path.dirname(__file__), "downloads")
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
+# Cookie file path (used to authenticate requests and bypass YouTube bot detection)
+COOKIE_FILE = os.getenv("YTDL_COOKIES_PATH", os.path.join(os.path.dirname(__file__), "cookies.txt"))
+
 # Serve static files from downloads folder
 app.mount("/files", StaticFiles(directory=DOWNLOAD_DIR), name="files")
 
@@ -108,16 +111,34 @@ async def cleanup_file(filepath: str, delay_seconds: int = 1800):
         print(f"Failed to clean up {filepath}: {str(e)}")
 
 
+def get_base_ydl_opts() -> dict:
+    """Konfigurasi dasar yt-dlp dengan dukungan cookies dan fallback player_client."""
+    opts = {
+        "quiet": True,
+        "no_warnings": True,
+        "extractor_args": {
+            "youtube": {
+                "player_client": ["android", "ios", "web"]
+            }
+        },
+    }
+    if os.path.exists(COOKIE_FILE) and os.path.getsize(COOKIE_FILE) > 0:
+        opts["cookiefile"] = COOKIE_FILE
+    return opts
+
 # ============================================
-# GET /
-# Health check
+# GET /health
+# Health check & Cookie status
 # ============================================
-@app.get("/")
+@app.get("/health")
 def health_check():
+    cookies_present = os.path.exists(COOKIE_FILE) and os.path.getsize(COOKIE_FILE) > 0
     return {
         "status": "ok",
         "message": "YT Downloader API is running",
+        "cookies_loaded": cookies_present,
         "endpoints": {
+            "health": "GET /health — Server health check & cookies status",
             "info": "POST /info — Get video info",
             "file": "POST /file — Download & serve video file",
         },
@@ -134,12 +155,11 @@ async def get_video_info(req: InfoRequest, request: Request):
     if not is_valid_youtube_url(req.url):
         raise HTTPException(status_code=400, detail="Invalid YouTube URL")
 
-    ydl_opts = {
+    ydl_opts = get_base_ydl_opts()
+    ydl_opts.update({
         "dump_single_json": True,
         "extract_flat": False,
-        "quiet": True,
-        "no_warnings": True,
-    }
+    })
 
     try:
         # Run synchronous yt-dlp call in a thread
@@ -180,8 +200,11 @@ async def get_video_info(req: InfoRequest, request: Request):
         }
 
     except Exception as e:
-        print(f"Error getting info: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        err_msg = str(e)
+        print(f"Error getting info: {err_msg}")
+        if "Sign in to confirm you’re not a bot" in err_msg or "Sign in to confirm you're not a bot" in err_msg:
+            err_msg = "YouTube bot detection triggered: Sign in to confirm you're not a bot. Silakan pasang cookies.txt di server atau update yt-dlp."
+        raise HTTPException(status_code=500, detail=err_msg)
 
 # ============================================
 # POST /file
@@ -198,13 +221,12 @@ async def download_video_file(req: FileRequest, request: Request, background_tas
     filename = str(int(time.time()))
     output_template = os.path.join(DOWNLOAD_DIR, f"{filename}.%(ext)s")
 
-    ydl_opts = {
+    ydl_opts = get_base_ydl_opts()
+    ydl_opts.update({
         "format": format_arg,
         "merge_output_format": "mp4",
         "outtmpl": output_template,
-        "quiet": True,
-        "no_warnings": True,
-    }
+    })
 
     print(f"Downloading: {req.url}")
 
@@ -255,8 +277,11 @@ async def download_video_file(req: FileRequest, request: Request, background_tas
         }
 
     except Exception as e:
-        print(f"Error downloading file: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        err_msg = str(e)
+        print(f"Error downloading file: {err_msg}")
+        if "Sign in to confirm you’re not a bot" in err_msg or "Sign in to confirm you're not a bot" in err_msg:
+            err_msg = "YouTube bot detection triggered: Sign in to confirm you're not a bot. Silakan pasang cookies.txt di server atau update yt-dlp."
+        raise HTTPException(status_code=500, detail=err_msg)
 
 if __name__ == "__main__":
     import uvicorn
