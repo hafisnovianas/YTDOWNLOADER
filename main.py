@@ -89,16 +89,18 @@ def is_valid_youtube_url(url: str) -> bool:
     ]
     return any(re.match(p, url) for p in patterns)
 
-def get_format_arg(quality: str) -> str:
-    quality_map = {
-        "best": "bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio/best",
-        "worst": "worstvideo+worstaudio/worst",
-        "1080": "bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/bestvideo[height<=1080]+bestaudio/best[height<=1080]/best",
-        "720": "bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]/bestvideo[height<=720]+bestaudio/best[height<=720]/best",
-        "480": "bestvideo[height<=480][ext=mp4]+bestaudio[ext=m4a]/bestvideo[height<=480]+bestaudio/best[height<=480]/best",
-        "360": "bestvideo[height<=360][ext=mp4]+bestaudio[ext=m4a]/bestvideo[height<=360]+bestaudio/best[height<=360]/best",
+def get_format_opts(quality: str) -> dict:
+    """Mengembalikan opsi format dan format_sort modern untuk yt-dlp."""
+    sort_rules = ["ext:mp4:m4a"]
+    if quality in ["1080", "720", "480", "360"]:
+        sort_rules = [f"res:{quality}", "ext:mp4:m4a"]
+    elif quality == "worst":
+        sort_rules = ["+res", "ext:mp4:m4a"]
+
+    return {
+        "format": "bv*+ba/b",
+        "format_sort": sort_rules,
     }
-    return quality_map.get(quality, quality_map["best"])
 
 async def cleanup_file(filepath: str, delay_seconds: int = 1800):
     """Wait for 'delay_seconds' and then delete the file."""
@@ -212,15 +214,15 @@ async def download_video_file(req: FileRequest, request: Request, background_tas
     if not is_valid_youtube_url(req.url):
         raise HTTPException(status_code=400, detail="Invalid YouTube URL")
 
-    format_arg = get_format_arg(req.quality)
+    format_opts = get_format_opts(req.quality)
     filename = str(int(time.time()))
     output_template = os.path.join(DOWNLOAD_DIR, f"{filename}.%(ext)s")
 
     ydl_opts = get_base_ydl_opts()
     ydl_opts.update({
-        "format": format_arg,
         "merge_output_format": "mp4",
         "outtmpl": output_template,
+        **format_opts,
     })
 
     print(f"Downloading: {req.url}")

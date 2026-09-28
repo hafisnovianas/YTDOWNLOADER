@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Error HTTP 500 `Sign in to confirm you’re not a bot` pada endpoint download di server VPS.
-- Error `Requested format is not available` pada resolusi 720p/1080p dengan memperbarui selektor format fallback yang lebih fleksibel.
+- Error `Requested format is not available` pada resolusi 720p/1080p dengan beralih ke selektor modern `bv*+ba/b` dan pemilahan resolusi berbasis `format_sort`.
 
 ### Security
 - Mengabaikan file `cookies.txt`, `*.cookie`, dan `*.cookies` di `.gitignore` untuk melindungi keamanan akun YouTube.
