@@ -91,12 +91,12 @@ def is_valid_youtube_url(url: str) -> bool:
 
 def get_format_arg(quality: str) -> str:
     quality_map = {
-        "best": "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best",
-        "worst": "worstvideo[ext=mp4]+worstaudio[ext=m4a]/worst[ext=mp4]/worst",
-        "1080": "bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/best[height<=1080][ext=mp4]",
-        "720": "bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]/best[height<=720][ext=mp4]",
-        "480": "bestvideo[height<=480][ext=mp4]+bestaudio[ext=m4a]/best[height<=480][ext=mp4]",
-        "360": "bestvideo[height<=360][ext=mp4]+bestaudio[ext=m4a]/best[height<=360][ext=mp4]",
+        "best": "bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio/best",
+        "worst": "worstvideo+worstaudio/worst",
+        "1080": "bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/bestvideo[height<=1080]+bestaudio/best[height<=1080]/best",
+        "720": "bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]/bestvideo[height<=720]+bestaudio/best[height<=720]/best",
+        "480": "bestvideo[height<=480][ext=mp4]+bestaudio[ext=m4a]/bestvideo[height<=480]+bestaudio/best[height<=480]/best",
+        "360": "bestvideo[height<=360][ext=mp4]+bestaudio[ext=m4a]/bestvideo[height<=360]+bestaudio/best[height<=360]/best",
     }
     return quality_map.get(quality, quality_map["best"])
 
@@ -112,15 +112,10 @@ async def cleanup_file(filepath: str, delay_seconds: int = 1800):
 
 
 def get_base_ydl_opts() -> dict:
-    """Konfigurasi dasar yt-dlp dengan dukungan cookies dan fallback player_client."""
+    """Konfigurasi dasar yt-dlp dengan dukungan cookies."""
     opts = {
         "quiet": True,
         "no_warnings": True,
-        "extractor_args": {
-            "youtube": {
-                "player_client": ["android", "ios", "web"]
-            }
-        },
     }
     if os.path.exists(COOKIE_FILE) and os.path.getsize(COOKIE_FILE) > 0:
         opts["cookiefile"] = COOKIE_FILE
