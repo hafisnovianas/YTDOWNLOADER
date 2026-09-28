@@ -114,10 +114,11 @@ async def cleanup_file(filepath: str, delay_seconds: int = 1800):
 
 
 def get_base_ydl_opts() -> dict:
-    """Konfigurasi dasar yt-dlp dengan dukungan cookies dan EJS challenge solver."""
+    """Konfigurasi dasar yt-dlp dengan dukungan cookies dan EJS challenge solver via Node.js."""
     opts = {
         "quiet": True,
         "no_warnings": True,
+        "js_runtimes": "node",
         "remote_components": ["ejs:github"],
     }
     if os.path.exists(COOKIE_FILE) and os.path.getsize(COOKIE_FILE) > 0:

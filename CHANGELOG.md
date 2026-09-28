@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Endpoint `GET /health` untuk memantau status aplikasi dan status pemuatan cookies (`cookies_loaded`).
 - Skrip utilitas `create_cookies.py` untuk mengonversi cookie mentah dari browser Inspect ke format Netscape `cookies.txt`.
 - Panduan penanganan anti-bot YouTube dan ekspor cookies di `DEPLOYMENT_GUIDE.md`.
-- Integrasi `yt-dlp-ejs` dan opsi `remote_components: ["ejs:github"]` untuk memecahkan enkripsi YouTube signature/n-challenge modern.
+- Integrasi `yt-dlp-ejs`, `remote_components: ["ejs:github"]`, dan `js_runtimes: "node"` untuk memecahkan enkripsi YouTube signature/n-challenge modern via Node.js.
 
 ### Changed
 - Konfigurasi `yt-dlp` menambahkan fallback `player_client` (`android`, `ios`, `web`) untuk menghindari deteksi bot.
