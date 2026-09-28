@@ -90,18 +90,17 @@ def is_valid_youtube_url(url: str) -> bool:
     ]
     return any(re.match(p, url) for p in patterns)
 
-def get_format_opts(quality: str) -> dict:
-    """Mengembalikan opsi format dan format_sort modern untuk yt-dlp."""
-    sort_rules = ["ext:mp4:m4a"]
-    if quality in ["1080", "720", "480", "360"]:
-        sort_rules = [f"res:{quality}", "ext:mp4:m4a"]
-    elif quality == "worst":
-        sort_rules = ["+res", "ext:mp4:m4a"]
-
-    return {
-        "format": "bv*+ba/b",
-        "format_sort": sort_rules,
+def get_format_arg(quality: str) -> str:
+    """Mengembalikan format selector yang kompatibel dan aman untuk yt-dlp."""
+    quality_map = {
+        "best": "bv*+ba/b",
+        "worst": "wv*+wa/w",
+        "1080": "bv*[height<=1080]+ba/b[height<=1080]/bv*+ba/b",
+        "720": "bv*[height<=720]+ba/b[height<=720]/bv*+ba/b",
+        "480": "bv*[height<=480]+ba/b[height<=480]/bv*+ba/b",
+        "360": "bv*[height<=360]+ba/b[height<=360]/bv*+ba/b",
     }
+    return quality_map.get(quality, "bv*+ba/b")
 
 async def cleanup_file(filepath: str, delay_seconds: int = 1800):
     """Wait for 'delay_seconds' and then delete the file."""
@@ -115,6 +114,7 @@ async def cleanup_file(filepath: str, delay_seconds: int = 1800):
 
 
 DENO_BIN = shutil.which("deno") or "/usr/local/bin/deno"
+FFMPEG_DIR = os.path.dirname(shutil.which("ffmpeg") or "/usr/bin/ffmpeg")
 
 def get_base_ydl_opts() -> dict:
     """Konfigurasi dasar yt-dlp dengan dukungan cookies dan EJS challenge solver via Deno."""
@@ -123,6 +123,7 @@ def get_base_ydl_opts() -> dict:
             "deno": {"path": DENO_BIN}
         },
         "remote_components": ["ejs:github"],
+        "ffmpeg_location": FFMPEG_DIR,
     }
     if os.path.exists(COOKIE_FILE) and os.path.getsize(COOKIE_FILE) > 0:
         opts["cookiefile"] = COOKIE_FILE
@@ -219,15 +220,15 @@ async def download_video_file(req: FileRequest, request: Request, background_tas
     if not is_valid_youtube_url(req.url):
         raise HTTPException(status_code=400, detail="Invalid YouTube URL")
 
-    format_opts = get_format_opts(req.quality)
+    format_arg = get_format_arg(req.quality)
     filename = str(int(time.time()))
     output_template = os.path.join(DOWNLOAD_DIR, f"{filename}.%(ext)s")
 
     ydl_opts = get_base_ydl_opts()
     ydl_opts.update({
+        "format": format_arg,
         "merge_output_format": "mp4",
         "outtmpl": output_template,
-        **format_opts,
     })
 
     print(f"Downloading: {req.url}")
