@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Penanganan error di `main.py` diperjelas dengan instruksi solusi ketika bot detection terpicu.
 - Dependensi `requirements.txt` diperbarui untuk mendukung rilis terbaru `yt-dlp`.
 - Workflow CI/CD deployment (`.github/workflows/deploy.yml`) kini menyertakan `--upgrade` pada pip install.
+- Workflow CI/CD deployment (`.github/workflows/deploy.yml`) kini mendukung pembuatan otomatis virtual environment (`venv`) jika belum ada serta dukungan port kustom SSH (`PORT`).
+- Dokumentasi `DEPLOYMENT_GUIDE.md` diperbarui dengan penambahan variabel secret `PORT` dan `YTDL_API_KEY` serta penyelarasan kode workflow.
 
 ### Fixed
 - Error HTTP 500 `Sign in to confirm you’re not a bot` pada endpoint download di server VPS.

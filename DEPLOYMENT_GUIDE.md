@@ -48,6 +48,8 @@ Agar GitHub Actions bisa me-remote VPS kamu secara otomatis dan aman, kita perlu
   - `USERNAME`: Username untuk login ke VPS (biasanya `root` atau `ubuntu`).
   - `SSH_KEY`: Isi dengan **Private Key SSH** dari VPS kamu.
     *(Cara mendapatkannya: di VPS kamu jalankan `cat ~/.ssh/id_rsa`, salin semua text dari `-----BEGIN RSA PRIVATE KEY-----` sampai `-----END RSA PRIVATE KEY-----`. Jika belum punya, buat dulu dengan `ssh-keygen -t rsa` di VPS).*
+  - `PORT`: *(Opsional)* Port SSH VPS kamu jika tidak menggunakan port default `22`.
+  - `YTDL_API_KEY`: API Key rahasia untuk mengamankan akses ke backend API.
 
 ### 3. Buat File Workflow GitHub Actions
 Langkah ini dilakukan di kode lokal kamu:
@@ -79,6 +81,7 @@ jobs:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.PORT || 22 }}
           source: "."
           target: "/home/${{ secrets.USERNAME }}/ytdownloader"
           strip_components: 0
@@ -89,15 +92,20 @@ jobs:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.PORT || 22 }}
           script: |
             # Masuk ke folder yang baru saja dibuat & dicopy oleh langkah sebelumnya
             cd /home/${{ secrets.USERNAME }}/ytdownloader
             
-            # Install dependensi (sangat aman dijalankan tiap deploy)
-            venv/bin/pip install -r requirements.txt
+            # Buat virtual environment jika belum ada
+            [ -d "venv" ] || python3 -m venv venv
+
+            # Install / Upgrade dependensi (pastikan yt-dlp selalu terbaru untuk anti-bot YouTube)
+            venv/bin/pip install --upgrade -r requirements.txt
             
             # Restart aplikasi menggunakan PM2 (restart gracefully)
-            pm2 restart ytdownloader || pm2 start "venv/bin/python main.py" --name "ytdownloader"
+            export YTDL_API_KEY="${{ secrets.YTDL_API_KEY }}"
+            pm2 restart ytdownloader --update-env || pm2 start "venv/bin/python main.py" --name "ytdownloader"
             pm2 save
 ```
 

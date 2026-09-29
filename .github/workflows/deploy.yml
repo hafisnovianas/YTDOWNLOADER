@@ -18,6 +18,7 @@ jobs:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.PORT || 22 }}
           source: "."
           target: "/home/${{ secrets.USERNAME }}/ytdownloader"
           strip_components: 0
@@ -28,10 +29,14 @@ jobs:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.PORT || 22 }}
           script: |
             # Masuk ke folder yang baru saja dibuat & dicopy oleh langkah sebelumnya
             cd /home/${{ secrets.USERNAME }}/ytdownloader
             
+            # Buat virtual environment jika belum ada
+            [ -d "venv" ] || python3 -m venv venv
+
             # Install / Upgrade dependensi (pastikan yt-dlp selalu terbaru untuk anti-bot YouTube)
             venv/bin/pip install --upgrade -r requirements.txt
             
