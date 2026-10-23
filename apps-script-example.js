@@ -55,7 +55,7 @@ function getVideoInfo(youtubeUrl) {
  * 2. Fungsi untuk Mendownload Video dan Mendapatkan Link Streaming
  * @param {string} youtubeUrl - Link YouTube
  * @param {string} quality - Resolusi (best, 1080, 720, 480, 360)
- * @returns {string|null} URL untuk mendownload/stream video
+ * @returns {object|null} Data video lengkap (downloadUrl, title, duration, resolution, dll)
  */
 function downloadVideo(youtubeUrl, quality = "720") {
   const endpoint = API_BASE_URL + "/file";
@@ -82,7 +82,7 @@ function downloadVideo(youtubeUrl, quality = "720") {
       Logger.log("✅ Video siap di server!");
       Logger.log("🎥 Link Video: " + json.data.downloadUrl);
       Logger.log("⚠️ File ini akan kedaluwarsa dalam: " + json.data.expiresIn);
-      return json.data.downloadUrl;
+      return json.data;
     } else {
       Logger.log("❌ Error (" + responseCode + "): " + (json.detail || json.error));
       return null;
@@ -107,9 +107,12 @@ function runTest() {
   
   if (info) {
     Logger.log("\n--- MEMPROSES DOWNLOAD (720p) ---");
-    const downloadUrl = downloadVideo(testUrl, "720");
+    const videoData = downloadVideo(testUrl, "720");
     
-    if (downloadUrl) {
+    if (videoData && videoData.downloadUrl) {
+      Logger.log("🎬 Judul: " + videoData.title);
+      Logger.log("📏 Resolusi: " + videoData.resolution);
+      Logger.log("⏱️ Durasi: " + videoData.duration_string);
       Logger.log("\n🎉 SELAMAT! API berjalan lancar dari Google Apps Script!");
     }
   }
