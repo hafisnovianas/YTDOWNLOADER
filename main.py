@@ -5,6 +5,7 @@ import time
 import asyncio
 import re
 import shutil
+from typing import Optional, Union
 from fastapi import FastAPI, HTTPException, Request, BackgroundTasks
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -80,10 +81,62 @@ class InfoRequest(BaseModel):
 class FileRequest(BaseModel):
     url: str
     quality: str = "best"
+    start_time: Optional[Union[str, float, int]] = None
+    end_time: Optional[Union[str, float, int]] = None
     api_key: str = ""
 
 
 # Helper Functions
+def parse_timestamp(val: Optional[Union[str, int, float]]) -> Optional[float]:
+    """Mengonversi input detik (angka/string) atau format timestamp (MM:SS, HH:MM:SS) ke float detik."""
+    if val is None:
+        return None
+    if isinstance(val, (int, float)):
+        if val < 0:
+            raise ValueError("Waktu tidak boleh bernilai negatif.")
+        return float(val)
+    
+    val_str = str(val).strip()
+    if not val_str:
+        return None
+        
+    if ":" in val_str:
+        parts = val_str.split(":")
+        if len(parts) > 3:
+            raise ValueError("Format timestamp tidak valid. Gunakan MM:SS atau HH:MM:SS.")
+        try:
+            parts_num = [float(p) for p in parts]
+            if any(p < 0 for p in parts_num):
+                raise ValueError("Komponen waktu tidak boleh bernilai negatif.")
+            if len(parts_num) == 2:
+                return parts_num[0] * 60 + parts_num[1]
+            elif len(parts_num) == 3:
+                return parts_num[0] * 3600 + parts_num[1] * 60 + parts_num[2]
+        except ValueError as e:
+            if "tidak boleh bernilai negatif" in str(e) or "Format timestamp" in str(e):
+                raise
+            raise ValueError(f"Format timestamp '{val_str}' tidak valid.")
+    else:
+        try:
+            sec = float(val_str)
+            if sec < 0:
+                raise ValueError("Waktu tidak boleh bernilai negatif.")
+            return sec
+        except ValueError:
+            raise ValueError(f"Format waktu '{val_str}' tidak valid sebagai angka detik.")
+
+def format_seconds_to_timestamp(seconds: Optional[float]) -> Optional[str]:
+    """Mengonversi detik ke format string HH:MM:SS atau MM:SS."""
+    if seconds is None:
+        return None
+    total_sec = int(round(seconds))
+    hrs = total_sec // 3600
+    mins = (total_sec % 3600) // 60
+    secs = total_sec % 60
+    if hrs > 0:
+        return f"{hrs:02d}:{mins:02d}:{secs:02d}"
+    return f"{mins:02d}:{secs:02d}"
+
 def is_valid_youtube_url(url: str) -> bool:
     patterns = [
         r"^https?:\/\/(www\.)?youtube\.com\/watch\?v=[\w-]+",
@@ -222,6 +275,16 @@ async def download_video_file(req: FileRequest, request: Request, background_tas
     if not is_valid_youtube_url(req.url):
         raise HTTPException(status_code=400, detail="Invalid YouTube URL")
 
+    # Parsing & validasi start_time / end_time
+    try:
+        start_sec = parse_timestamp(req.start_time)
+        end_sec = parse_timestamp(req.end_time)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    if start_sec is not None and end_sec is not None and start_sec >= end_sec:
+        raise HTTPException(status_code=400, detail="start_time harus lebih kecil dari end_time.")
+
     format_arg = get_format_arg(req.quality)
     filename = str(int(time.time()))
     output_template = os.path.join(DOWNLOAD_DIR, f"{filename}.%(ext)s")
@@ -232,6 +295,20 @@ async def download_video_file(req: FileRequest, request: Request, background_tas
         "merge_output_format": "mp4",
         "outtmpl": output_template,
     })
+
+    # Konfigurasi clipping jika start_sec atau end_sec ditentukan
+    is_clipped = (start_sec is not None or end_sec is not None)
+    if is_clipped:
+        def range_selector(info_dict, ydl):
+            video_dur = info_dict.get("duration")
+            if video_dur and start_sec is not None and start_sec >= video_dur:
+                raise yt_dlp.utils.DownloadError(f"start_time ({start_sec}s) melebihi durasi video ({video_dur}s).")
+            s = start_sec if start_sec is not None else 0
+            e = end_sec if end_sec is not None else video_dur
+            return [{"start_time": s, "end_time": e}]
+
+        ydl_opts["download_ranges"] = range_selector
+        ydl_opts["force_keyframes_at_cuts"] = True
 
     print(f"Downloading: {req.url}")
 
@@ -287,19 +364,39 @@ async def download_video_file(req: FileRequest, request: Request, background_tas
         if not real_resolution and req.quality not in ("best", "worst"):
             real_resolution = f"{req.quality}p"
 
+        # Hitung metadata klip jika pemotongan aktif
+        clip_info = None
+        if is_clipped:
+            effective_start = start_sec if start_sec is not None else 0.0
+            effective_end = end_sec if end_sec is not None else info.get("duration")
+            clip_dur = None
+            if effective_end is not None:
+                clip_dur = round(effective_end - effective_start, 2)
+            clip_info = {
+                "is_clipped": True,
+                "start_time": format_seconds_to_timestamp(effective_start),
+                "end_time": format_seconds_to_timestamp(effective_end),
+                "clip_duration": clip_dur,
+                "clip_duration_string": format_seconds_to_timestamp(clip_dur) if clip_dur else None,
+            }
+
+        response_payload = {
+            "downloadUrl": download_url,
+            "title": info.get("title", "Unknown"),
+            "thumbnail": info.get("thumbnail"),
+            "duration": info.get("duration"),
+            "duration_string": info.get("duration_string"),
+            "resolution": real_resolution or "Unknown",
+            "filename": downloaded_file,
+            "filesize": filesize,
+            "expiresIn": "30 minutes",
+        }
+        if clip_info:
+            response_payload["clip"] = clip_info
+
         return {
             "success": True,
-            "data": {
-                "downloadUrl": download_url,
-                "title": info.get("title", "Unknown"),
-                "thumbnail": info.get("thumbnail"),
-                "duration": info.get("duration"),
-                "duration_string": info.get("duration_string"),
-                "resolution": real_resolution or "Unknown",
-                "filename": downloaded_file,
-                "filesize": filesize,
-                "expiresIn": "30 minutes",
-            }
+            "data": response_payload
         }
 
     except Exception as e:
@@ -307,6 +404,8 @@ async def download_video_file(req: FileRequest, request: Request, background_tas
         print(f"Error downloading file: {err_msg}")
         if "Sign in to confirm you’re not a bot" in err_msg or "Sign in to confirm you're not a bot" in err_msg:
             err_msg = "YouTube bot detection triggered: Sign in to confirm you're not a bot. Silakan pasang cookies.txt di server atau update yt-dlp."
+        elif "melebihi durasi video" in err_msg:
+            raise HTTPException(status_code=400, detail=err_msg)
         raise HTTPException(status_code=500, detail=err_msg)
 
 if __name__ == "__main__":

@@ -336,6 +336,12 @@
                 value="https://www.youtube.com/watch?v=dQw4w9WgXcQ">
         </div>
 
+        <!-- Rentang Waktu (Clipping) Khusus /file -->
+        <div class="input-group" id="clippingGroup" style="margin-bottom: 1rem;">
+            <input type="text" id="startTimeInput" placeholder="⏱️ Mulai (misal: 00:15 atau 90)..." value="" title="Waktu Mulai Klip (opsional)">
+            <input type="text" id="endTimeInput" placeholder="⏱️ Selesai (misal: 01:30 atau 180)..." value="" title="Waktu Selesai Klip (opsional)">
+        </div>
+
         <div class="input-group">
             <input type="password" id="apiKeyInput" placeholder="🔑 API Key..." value="">
             <select id="qualitySelect"
@@ -377,12 +383,20 @@
 
     <script>
         let currentEndpoint = 'file';
-        const API_BASE = 'https://yt.dijumper.web.id';
+        // Auto-detect host: jika dibuka lewat localhost/server gunakan origin aktif, selain itu fallback ke production
+        const API_BASE = window.location.origin.includes('http') && !window.location.protocol.startsWith('file') 
+            ? window.location.origin 
+            : 'https://yt.dijumper.web.id';
 
         function setEndpoint(ep) {
             currentEndpoint = ep;
             document.querySelectorAll('.endpoint-btn').forEach(b => b.classList.remove('active'));
             document.getElementById('btn-' + ep).classList.add('active');
+
+            const clipGroup = document.getElementById('clippingGroup');
+            if (clipGroup) {
+                clipGroup.style.display = (ep === 'file') ? 'flex' : 'none';
+            }
         }
 
         function formatBytes(bytes, decimals = 2) {
@@ -398,6 +412,8 @@
             const url = document.getElementById('urlInput').value.trim();
             const quality = document.getElementById('qualitySelect').value;
             const api_key = document.getElementById('apiKeyInput').value;
+            const startTime = document.getElementById('startTimeInput').value.trim();
+            const endTime = document.getElementById('endTimeInput').value.trim();
             if (!url) return;
 
             // UI States
@@ -413,11 +429,18 @@
             resultCont.style.display = 'none';
             errorMsg.style.display = 'none';
 
+            const payload = { url, api_key };
+            if (currentEndpoint === 'file') {
+                payload.quality = quality;
+                if (startTime) payload.start_time = startTime;
+                if (endTime) payload.end_time = endTime;
+            }
+
             try {
                 const response = await fetch(`${API_BASE}/${currentEndpoint}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ url, quality, api_key })
+                    body: JSON.stringify(payload)
                 });
 
                 const data = await response.json();
@@ -447,7 +470,14 @@
                     document.getElementById('resTitle').textContent = d.title || 'Downloaded Video';
                     document.getElementById('resRes').textContent = `🎥 Quality: ${d.resolution || '-'}`;
                     document.getElementById('resSize').textContent = `💾 Size: ${formatBytes(d.filesize)}`;
-                    document.getElementById('resDur').textContent = (d.duration_string ? `⏱️ Duration: ${d.duration_string}  •  ` : '') + `⏳ Expires: ${d.expiresIn || '-'}`;
+                    
+                    let durText = (d.duration_string ? `⏱️ Duration: ${d.duration_string}  •  ` : '');
+                    if (d.clip && d.clip.is_clipped) {
+                        const durStr = d.clip.clip_duration_string || (d.clip.clip_duration ? d.clip.clip_duration + 's' : '-');
+                        durText += `✂️ Klip: ${d.clip.start_time || '00:00'} - ${d.clip.end_time || 'akhir'} (${durStr})  •  `;
+                    }
+                    durText += `⏳ Expires: ${d.expiresIn || '-'}`;
+                    document.getElementById('resDur').textContent = durText;
 
                     const link = d.downloadUrl;
                     document.getElementById('actionButtons').innerHTML = `
