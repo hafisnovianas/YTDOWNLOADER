@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-10-23
+
 ### Added
 - Dukungan deteksi dan pembacaan otomatis file `cookies.txt` di `main.py` untuk otentikasi YouTube pada IP data center/VPS.
 - Endpoint `GET /health` untuk memantau status aplikasi dan status pemuatan cookies (`cookies_loaded`).
