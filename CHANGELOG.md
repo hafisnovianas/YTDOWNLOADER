@@ -15,6 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Kolom input waktu mulai & selesai pada UI tester `test-ui.html` beserta tampilan rincian durasi klip pada kartu video.
 - Dokumentasi parameter pemotongan cuplikan dan contoh integrasi Google Apps Script di `README.md`.
 
+### Changed
+- Optimasi kecepatan pemotongan klip FFmpeg hingga 4x–6x lebih cepat menggunakan argumen `-preset ultrafast` pada `postprocessor_args`.
+
+### Fixed
+- Penanganan respons error HTML (HTTP 504 Gateway Timeout / 502 Bad Gateway) pada tester UI `test-ui.html` agar tidak memicu crash parser JSON `Unexpected token '<'`.
+
 ## [1.0.0] - 2026-10-23
 
 ### Added

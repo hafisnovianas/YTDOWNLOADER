@@ -24,7 +24,7 @@ Sebelum menyiapkan CI/CD, pastikan VPS kamu sudah siap:
    sudo apt install -y unzip && curl -fsSL https://deno.land/install.sh | sh && sudo ln -s ~/.deno/bin/deno /usr/local/bin/deno
    ```
 5. **Git** sudah terinstall.
-6. (Opsional tapi disarankan) Install **Nginx** sebagai Reverse Proxy untuk meneruskan trafik HTTP port 80/443 ke port 8000 lokal.
+6. (Opsional tapi disarankan) Install **Nginx** sebagai Reverse Proxy untuk meneruskan trafik HTTP port 80/443 ke port 8000 lokal. Disarankan menyertakan `proxy_read_timeout 300s;` agar pemotongan video durasi panjang tidak terkena 504 Gateway Timeout.
 
 ### 1. Setup Awal Virtual Environment (Lakukan sekali di VPS)
 Sebelum GitHub Actions bisa men-deploy aplikasi secara otomatis, kamu perlu menyiapkan folder target dan membuat Virtual Environment (venv) di VPS kamu secara manual *satu kali*:
