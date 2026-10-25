@@ -308,10 +308,6 @@ async def download_video_file(req: FileRequest, request: Request, background_tas
             return [{"start_time": s, "end_time": e}]
 
         ydl_opts["download_ranges"] = range_selector
-        ydl_opts["force_keyframes_at_cuts"] = True
-        ydl_opts["postprocessor_args"] = {
-            "ffmpeg": ["-preset", "ultrafast"]
-        }
 
     print(f"Downloading: {req.url}")
 

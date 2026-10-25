@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dokumentasi parameter pemotongan cuplikan dan contoh integrasi Google Apps Script di `README.md`.
 
 ### Changed
-- Optimasi kecepatan pemotongan klip FFmpeg hingga 4x–6x lebih cepat menggunakan argumen `-preset ultrafast` pada `postprocessor_args`.
+- Beralih ke mekanisme Stream Copy murni pada pemotongan cuplikan (clipping) untuk memproses durasi panjang secara instan dalam hitungan detik tanpa re-encoding dan bebas dari bottleneck CPU/timeout.
 
 ### Fixed
 - Penanganan respons error HTML (HTTP 504 Gateway Timeout / 502 Bad Gateway) pada tester UI `test-ui.html` agar tidak memicu crash parser JSON `Unexpected token '<'`.
