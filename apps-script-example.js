@@ -52,12 +52,14 @@ function getVideoInfo(youtubeUrl) {
 }
 
 /**
- * 2. Fungsi untuk Mendownload Video dan Mendapatkan Link Streaming
+ * 2. Fungsi untuk Mendownload Video atau Memotong Klip
  * @param {string} youtubeUrl - Link YouTube
  * @param {string} quality - Resolusi (best, 1080, 720, 480, 360)
- * @returns {object|null} Data video lengkap (downloadUrl, title, duration, resolution, dll)
+ * @param {string|number|null} startTime - Waktu mulai klip (misal: "00:15" atau 15, opsional)
+ * @param {string|number|null} endTime - Waktu selesai klip (misal: "02:30" atau 150, opsional)
+ * @returns {object|null} Data video lengkap (downloadUrl, title, duration, resolution, clip, dll)
  */
-function downloadVideo(youtubeUrl, quality = "720") {
+function downloadVideo(youtubeUrl, quality = "720", startTime = null, endTime = null) {
   const endpoint = API_BASE_URL + "/file";
   
   const payload = {
@@ -65,6 +67,10 @@ function downloadVideo(youtubeUrl, quality = "720") {
     quality: quality,
     api_key: API_KEY
   };
+  
+  // Sertakan rentang waktu jika diisi
+  if (startTime !== null && startTime !== "") payload.start_time = startTime;
+  if (endTime !== null && endTime !== "") payload.end_time = endTime;
   
   const options = {
     method: "post",
@@ -81,6 +87,9 @@ function downloadVideo(youtubeUrl, quality = "720") {
     if (responseCode === 200 && json.success) {
       Logger.log("✅ Video siap di server!");
       Logger.log("🎥 Link Video: " + json.data.downloadUrl);
+      if (json.data.clip && json.data.clip.is_clipped) {
+        Logger.log("✂️ Klip: " + json.data.clip.start_time + " s/d " + json.data.clip.end_time + " (" + json.data.clip.clip_duration_string + ")");
+      }
       Logger.log("⚠️ File ini akan kedaluwarsa dalam: " + json.data.expiresIn);
       return json.data;
     } else {
@@ -106,14 +115,24 @@ function runTest() {
   const info = getVideoInfo(testUrl);
   
   if (info) {
-    Logger.log("\n--- MEMPROSES DOWNLOAD (720p) ---");
+    Logger.log("\n--- CONTOH 1: UNDUH FULL VIDEO (720p) ---");
     const videoData = downloadVideo(testUrl, "720");
-    
     if (videoData && videoData.downloadUrl) {
       Logger.log("🎬 Judul: " + videoData.title);
       Logger.log("📏 Resolusi: " + videoData.resolution);
       Logger.log("⏱️ Durasi: " + videoData.duration_string);
-      Logger.log("\n🎉 SELAMAT! API berjalan lancar dari Google Apps Script!");
     }
+
+    Logger.log("\n--- CONTOH 2: UNDUH CUPLIKAN KLIP (00:10 s/d 00:30) ---");
+    const clipData = downloadVideo(testUrl, "720", "00:10", "00:30");
+    if (clipData && clipData.downloadUrl) {
+      Logger.log("🎬 Judul: " + clipData.title);
+      if (clipData.clip) {
+        Logger.log("✂️ Rentang Klip: " + clipData.clip.start_time + " - " + clipData.clip.end_time);
+        Logger.log("⏱️ Durasi Klip: " + clipData.clip.clip_duration_string);
+      }
+    }
+
+    Logger.log("\n🎉 SELAMAT! API berjalan lancar dari Google Apps Script!");
   }
 }

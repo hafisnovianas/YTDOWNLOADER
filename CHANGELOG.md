@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Beralih ke mekanisme Stream Copy murni pada pemotongan cuplikan (clipping) untuk memproses durasi panjang secara instan dalam hitungan detik tanpa re-encoding dan bebas dari bottleneck CPU/timeout.
+- Penyelarasan berkas klien Google Apps Script (apps-script-example.js) dengan dukungan parameter pemotongan klip (startTime & endTime).
 
 ### Fixed
 - Mengatasi HTTP 504 Gateway Timeout pada pemotongan durasi panjang dengan mengalihkan pemotongan ke berkas lokal (Local File Stream Copy) alih-alih streaming range yang dicekik oleh YouTube CDN.
