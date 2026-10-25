@@ -296,18 +296,8 @@ async def download_video_file(req: FileRequest, request: Request, background_tas
         "outtmpl": output_template,
     })
 
-    # Konfigurasi clipping jika start_sec atau end_sec ditentukan
+    # Cek apakah pemotongan klip diminta
     is_clipped = (start_sec is not None or end_sec is not None)
-    if is_clipped:
-        def range_selector(info_dict, ydl):
-            video_dur = info_dict.get("duration")
-            if video_dur and start_sec is not None and start_sec >= video_dur:
-                raise yt_dlp.utils.DownloadError(f"start_time ({start_sec}s) melebihi durasi video ({video_dur}s).")
-            s = start_sec if start_sec is not None else 0
-            e = end_sec if end_sec is not None else video_dur
-            return [{"start_time": s, "end_time": e}]
-
-        ydl_opts["download_ranges"] = range_selector
 
     print(f"Downloading: {req.url}")
 
@@ -326,6 +316,48 @@ async def download_video_file(req: FileRequest, request: Request, background_tas
 
         downloaded_file = files[0]
         filepath = os.path.join(DOWNLOAD_DIR, downloaded_file)
+
+        # Jika pemotongan klip aktif, potong file lokal dengan FFmpeg Stream Copy (cepat & bebas throttling YouTube)
+        if is_clipped:
+            video_dur = info.get("duration")
+            if video_dur and start_sec is not None and start_sec >= video_dur:
+                raise HTTPException(status_code=400, detail=f"start_time ({start_sec}s) melebihi durasi video ({video_dur}s).")
+
+            temp_cut_file = f"cut_{downloaded_file}"
+            temp_cut_path = os.path.join(DOWNLOAD_DIR, temp_cut_file)
+            ffmpeg_bin = shutil.which("ffmpeg") or os.path.join(FFMPEG_DIR, "ffmpeg")
+
+            cmd = [ffmpeg_bin, "-y"]
+            if start_sec is not None and start_sec > 0:
+                cmd.extend(["-ss", str(start_sec)])
+            if end_sec is not None:
+                duration_to_cut = end_sec - (start_sec if start_sec is not None else 0.0)
+                if duration_to_cut > 0:
+                    cmd.extend(["-t", str(duration_to_cut)])
+            cmd.extend([
+                "-i", filepath,
+                "-c", "copy",
+                "-avoid_negative_ts", "make_zero",
+                temp_cut_path
+            ])
+
+            print(f"Cutting locally with FFmpeg: {' '.join(cmd)}")
+            proc = await asyncio.create_subprocess_exec(
+                *cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+            stdout, stderr = await proc.communicate()
+
+            if proc.returncode == 0 and os.path.exists(temp_cut_path):
+                os.replace(temp_cut_path, filepath)
+            else:
+                err_text = stderr.decode(errors="ignore")
+                print(f"FFmpeg local cut error: {err_text}")
+                if os.path.exists(temp_cut_path):
+                    os.remove(temp_cut_path)
+                raise Exception(f"Gagal memotong video: {err_text[:200]}")
+
         filesize = os.path.getsize(filepath)
 
         # Build download URL

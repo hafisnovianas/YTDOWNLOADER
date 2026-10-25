@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Beralih ke mekanisme Stream Copy murni pada pemotongan cuplikan (clipping) untuk memproses durasi panjang secara instan dalam hitungan detik tanpa re-encoding dan bebas dari bottleneck CPU/timeout.
 
 ### Fixed
+- Mengatasi HTTP 504 Gateway Timeout pada pemotongan durasi panjang dengan mengalihkan pemotongan ke berkas lokal (Local File Stream Copy) alih-alih streaming range yang dicekik oleh YouTube CDN.
 - Penanganan respons error HTML (HTTP 504 Gateway Timeout / 502 Bad Gateway) pada tester UI `test-ui.html` agar tidak memicu crash parser JSON `Unexpected token '<'`.
 
 ## [1.0.0] - 2026-10-23
